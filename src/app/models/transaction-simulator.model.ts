@@ -25,6 +25,13 @@ export interface ApprovedTransactionsPageDto {
   totalCount: number;
 }
 
+export interface ApprovedTransactionsPage {
+  items: ApprovedTransaction[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
 export function toTimeZoneOptions(timeZones: string[]): TimeZoneOption[] {
   return timeZones.map((timeZone) => ({
     id: timeZone,

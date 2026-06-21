@@ -1,5 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, ElementRef, computed, input, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, input, output, viewChild } from '@angular/core';
 
 import { TransactionCard } from '../transaction-card/transaction-card';
 import type { AppLanguage, ApprovedTransaction, TimeZoneOption } from '../../models/transaction-simulator.model';
@@ -11,9 +11,15 @@ import type { AppLanguage, ApprovedTransaction, TimeZoneOption } from '../../mod
   styleUrl: './approved-transactions.scss',
 })
 export class ApprovedTransactions {
+  private static readonly SCROLL_THRESHOLD_PX = 120;
+
   readonly language = input.required<AppLanguage>();
   readonly transactions = input.required<ApprovedTransaction[]>();
   readonly timeZoneOptions = input.required<TimeZoneOption[]>();
+  readonly hasMore = input(false);
+  readonly isLoadingMore = input(false);
+
+  readonly loadMore = output<void>();
 
   private readonly carousel = viewChild<ElementRef<HTMLElement>>('carousel');
 
@@ -45,5 +51,21 @@ export class ApprovedTransactions {
 
   protected scrollNext(): void {
     this.carousel()?.nativeElement.scrollBy({ left: 180, behavior: 'smooth' });
+  }
+
+  protected onCarouselScroll(event: Event): void {
+    if (!this.hasMore() || this.isLoadingMore()) {
+      return;
+    }
+
+    const element = event.target as HTMLElement;
+    const { scrollLeft, clientWidth, scrollWidth } = element;
+
+    if (
+      scrollLeft + clientWidth >=
+      scrollWidth - ApprovedTransactions.SCROLL_THRESHOLD_PX
+    ) {
+      this.loadMore.emit();
+    }
   }
 }

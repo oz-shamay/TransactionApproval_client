@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 import type {
   ApprovedTransaction,
   ApprovedTransactionItemDto,
+  ApprovedTransactionsPage,
   ApprovedTransactionsPageDto,
 } from '../models/transaction-simulator.model';
 import { ApiService } from './api.service';
@@ -18,20 +19,35 @@ export class TransactionService {
 
   getApprovedTransactions(
     timeZone: string,
-    createdAtTime: string,
-  ): Observable<ApprovedTransaction[]> {
+    createdAtTime?: string | null,
+    page?: number,
+  ): Observable<ApprovedTransactionsPage> {
+    const params: Record<string, string> = { TimeZone: timeZone };
+
+    if (createdAtTime) {
+      params['CreatedAtTime'] = createdAtTime;
+    }
+
+    if (page !== undefined) {
+      params['Page'] = String(page);
+    }
+
     return this.api
       .get<ApprovedTransactionsPageDto>('Transactions/approved', {
-        params: {
-          TimeZone: timeZone,
-          CreatedAtTime: createdAtTime,
-        },
+        params,
       })
-      .pipe(
-        map((page) =>
-          page.items.map((item) => this.toApprovedTransaction(item)),
-        ),
-      );
+      .pipe(map((pageDto) => this.toApprovedTransactionsPage(pageDto)));
+  }
+
+  private toApprovedTransactionsPage(
+    pageDto: ApprovedTransactionsPageDto,
+  ): ApprovedTransactionsPage {
+    return {
+      items: pageDto.items.map((item) => this.toApprovedTransaction(item)),
+      page: pageDto.page,
+      pageSize: pageDto.pageSize,
+      totalCount: pageDto.totalCount,
+    };
   }
 
   private toApprovedTransaction(

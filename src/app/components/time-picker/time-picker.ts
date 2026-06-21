@@ -1,4 +1,13 @@
-import { Component, computed, input, output } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 
 import type { AppLanguage } from '../../models/transaction-simulator.model';
 
@@ -8,14 +17,24 @@ import type { AppLanguage } from '../../models/transaction-simulator.model';
   styleUrl: './time-picker.scss',
 })
 export class TimePicker {
-  readonly language = input.required<AppLanguage>();
-  readonly hour = input.required<number>();
-  readonly minute = input.required<number>();
+  private static readonly INPUT_DEBOUNCE_MS = 600;
 
-  readonly hourChange = output<number>();
-  readonly minuteChange = output<number>();
+  readonly language = input.required<AppLanguage>();
+  readonly hour = input<number | null>(null);
+  readonly minute = input<number | null>(null);
+
+  readonly hourChange = output<number | null>();
+  readonly minuteChange = output<number | null>();
   readonly confirm = output<void>();
   readonly cancel = output<void>();
+
+  protected readonly hourDraft = signal('');
+  protected readonly minuteDraft = signal('');
+
+  private hourDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private minuteDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly title = computed(() =>
     this.language() === 'he' ? 'בחר שעה' : 'Enter time',
@@ -37,53 +56,131 @@ export class TimePicker {
     this.language() === 'he' ? 'אישור' : 'OK',
   );
 
-  protected formatValue(value: number): string {
+  constructor() {
+    effect(() => {
+      this.hourDraft.set(this.formatValue(this.hour()));
+    });
+
+    effect(() => {
+      this.minuteDraft.set(this.formatValue(this.minute()));
+    });
+
+    this.destroyRef.onDestroy(() => {
+      this.clearHourDebounce();
+      this.clearMinuteDebounce();
+    });
+  }
+
+  protected formatValue(value: number | null): string {
+    if (value === null) {
+      return '';
+    }
+
     return value.toString().padStart(2, '0');
   }
 
   protected onHourInput(value: string): void {
     const digits = value.replace(/\D/g, '');
-
-    if (digits === '') {
-      return;
-    }
-
-    const parsed = Number.parseInt(digits, 10);
-
-    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 23) {
-      this.hourChange.emit(parsed);
-    }
+    this.hourDraft.set(digits);
+    this.scheduleHourCommit(digits);
   }
 
   protected onMinuteInput(value: string): void {
     const digits = value.replace(/\D/g, '');
-
-    if (digits === '') {
-      return;
-    }
-
-    const parsed = Number.parseInt(digits, 10);
-
-    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 59) {
-      this.minuteChange.emit(parsed);
-    }
+    this.minuteDraft.set(digits);
+    this.scheduleMinuteCommit(digits);
   }
 
   protected onHourBlur(input: HTMLInputElement): void {
-    const clamped = this.clampValue(input.value, 0, 23);
-    this.hourChange.emit(clamped);
-    input.value = this.formatValue(clamped);
+    this.clearHourDebounce();
+    const digits = input.value.replace(/\D/g, '');
+
+    if (digits === '') {
+      this.commitHour(null);
+      this.hourDraft.set('');
+      return;
+    }
+
+    const clamped = this.clampValue(digits, 0, 23);
+    this.commitHour(clamped);
+    this.hourDraft.set(this.formatValue(clamped));
   }
 
   protected onMinuteBlur(input: HTMLInputElement): void {
-    const clamped = this.clampValue(input.value, 0, 59);
-    this.minuteChange.emit(clamped);
-    input.value = this.formatValue(clamped);
+    this.clearMinuteDebounce();
+    const digits = input.value.replace(/\D/g, '');
+
+    if (digits === '') {
+      this.commitMinute(null);
+      this.minuteDraft.set('');
+      return;
+    }
+
+    const clamped = this.clampValue(digits, 0, 59);
+    this.commitMinute(clamped);
+    this.minuteDraft.set(this.formatValue(clamped));
+  }
+
+  private scheduleHourCommit(digits: string): void {
+    this.clearHourDebounce();
+    this.hourDebounceTimer = setTimeout(() => {
+      this.hourDebounceTimer = null;
+
+      if (digits === '') {
+        this.commitHour(null);
+        return;
+      }
+
+      const parsed = Number.parseInt(digits, 10);
+
+      if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 23) {
+        this.commitHour(parsed);
+      }
+    }, TimePicker.INPUT_DEBOUNCE_MS);
+  }
+
+  private scheduleMinuteCommit(digits: string): void {
+    this.clearMinuteDebounce();
+    this.minuteDebounceTimer = setTimeout(() => {
+      this.minuteDebounceTimer = null;
+
+      if (digits === '') {
+        this.commitMinute(null);
+        return;
+      }
+
+      const parsed = Number.parseInt(digits, 10);
+
+      if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 59) {
+        this.commitMinute(parsed);
+      }
+    }, TimePicker.INPUT_DEBOUNCE_MS);
+  }
+
+  private commitHour(value: number | null): void {
+    this.hourChange.emit(value);
+  }
+
+  private commitMinute(value: number | null): void {
+    this.minuteChange.emit(value);
+  }
+
+  private clearHourDebounce(): void {
+    if (this.hourDebounceTimer !== null) {
+      clearTimeout(this.hourDebounceTimer);
+      this.hourDebounceTimer = null;
+    }
+  }
+
+  private clearMinuteDebounce(): void {
+    if (this.minuteDebounceTimer !== null) {
+      clearTimeout(this.minuteDebounceTimer);
+      this.minuteDebounceTimer = null;
+    }
   }
 
   private clampValue(value: string, min: number, max: number): number {
-    const digits = value.replace(/\D/g, '');
-    const parsed = Number.parseInt(digits, 10);
+    const parsed = Number.parseInt(value, 10);
 
     if (Number.isNaN(parsed)) {
       return min;
