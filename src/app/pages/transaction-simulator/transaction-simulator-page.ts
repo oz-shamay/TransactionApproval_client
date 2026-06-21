@@ -32,8 +32,8 @@ export class TransactionSimulatorPage {
 
   protected readonly language = signal<AppLanguage>('en');
   protected readonly selectedTimeZoneId = signal<string | null>(null);
-  protected readonly hour = signal(20);
-  protected readonly minute = signal(0);
+  protected readonly hour = signal<number | null>(null);
+  protected readonly minute = signal<number | null>(null);
   protected readonly timeZoneOptions = signal<TimeZoneOption[]>([]);
   protected readonly approvedTransactions = signal<ApprovedTransaction[]>([]);
 
@@ -70,11 +70,11 @@ export class TransactionSimulatorPage {
     this.selectedTimeZoneId.set(timeZoneId);
   }
 
-  protected setHour(hour: number): void {
+  protected setHour(hour: number | null): void {
     this.hour.set(hour);
   }
 
-  protected setMinute(minute: number): void {
+  protected setMinute(minute: number | null): void {
     this.minute.set(minute);
   }
 
@@ -85,7 +85,12 @@ export class TransactionSimulatorPage {
       return;
     }
 
-    const createdAtTime = this.formatTime(this.hour(), this.minute());
+    const hour = this.hour();
+    const minute = this.minute();
+    const createdAtTime =
+      hour !== null && minute !== null
+        ? this.formatTime(hour, minute)
+        : null;
 
     this.transactionService
       .getApprovedTransactions(timeZone, createdAtTime)

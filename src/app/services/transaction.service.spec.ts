@@ -84,4 +84,39 @@ describe('TransactionService', () => {
     expect(request.request.method).toBe('GET');
     request.flush(mockResponse);
   });
+
+  it('should fetch approved transactions with timezone only', () => {
+    const mockResponse = {
+      items: [
+        {
+          id: 2,
+          timeZone: 'Europe/London',
+          createdAtTime: '2026-06-20T17:45:08.0545231',
+        },
+      ],
+      page: 0,
+      pageSize: 20,
+      totalCount: 1,
+    };
+
+    service.getApprovedTransactions('Europe/London').subscribe((transactions) => {
+      expect(transactions).toEqual([
+        {
+          id: '2',
+          time: '18:45',
+          timeZoneId: 'Europe/London',
+        },
+      ]);
+    });
+
+    const request = httpMock.expectOne((req) => {
+      return (
+        req.url === 'https://localhost:44385/Transactions/approved' &&
+        req.params.get('TimeZone') === 'Europe/London' &&
+        req.params.get('CreatedAtTime') === null
+      );
+    });
+    expect(request.request.method).toBe('GET');
+    request.flush(mockResponse);
+  });
 });

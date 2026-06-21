@@ -18,14 +18,17 @@ export class TransactionService {
 
   getApprovedTransactions(
     timeZone: string,
-    createdAtTime: string,
+    createdAtTime?: string | null,
   ): Observable<ApprovedTransaction[]> {
+    const params: Record<string, string> = { TimeZone: timeZone };
+
+    if (createdAtTime) {
+      params['CreatedAtTime'] = createdAtTime;
+    }
+
     return this.api
       .get<ApprovedTransactionsPageDto>('Transactions/approved', {
-        params: {
-          TimeZone: timeZone,
-          CreatedAtTime: createdAtTime,
-        },
+        params,
       })
       .pipe(
         map((page) =>
