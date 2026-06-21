@@ -59,19 +59,24 @@ describe('TransactionService', () => {
 
     service
       .getApprovedTransactions('Europe/London', '09:01')
-      .subscribe((transactions) => {
-        expect(transactions).toEqual([
-          {
-            id: '2',
-            time: '18:45',
-            timeZoneId: 'Europe/London',
-          },
-          {
-            id: '3',
-            time: '20:45',
-            timeZoneId: 'Asia/Jerusalem',
-          },
-        ]);
+      .subscribe((page) => {
+        expect(page).toEqual({
+          items: [
+            {
+              id: '2',
+              time: '18:45',
+              timeZoneId: 'Europe/London',
+            },
+            {
+              id: '3',
+              time: '20:45',
+              timeZoneId: 'Asia/Jerusalem',
+            },
+          ],
+          page: 0,
+          pageSize: 20,
+          totalCount: 2,
+        });
       });
 
     const request = httpMock.expectOne((req) => {
@@ -99,14 +104,19 @@ describe('TransactionService', () => {
       totalCount: 1,
     };
 
-    service.getApprovedTransactions('Europe/London').subscribe((transactions) => {
-      expect(transactions).toEqual([
-        {
-          id: '2',
-          time: '18:45',
-          timeZoneId: 'Europe/London',
-        },
-      ]);
+    service.getApprovedTransactions('Europe/London').subscribe((page) => {
+      expect(page).toEqual({
+        items: [
+          {
+            id: '2',
+            time: '18:45',
+            timeZoneId: 'Europe/London',
+          },
+        ],
+        page: 0,
+        pageSize: 20,
+        totalCount: 1,
+      });
     });
 
     const request = httpMock.expectOne((req) => {
@@ -114,6 +124,40 @@ describe('TransactionService', () => {
         req.url === 'https://localhost:44385/Transactions/approved' &&
         req.params.get('TimeZone') === 'Europe/London' &&
         req.params.get('CreatedAtTime') === null
+      );
+    });
+    expect(request.request.method).toBe('GET');
+    request.flush(mockResponse);
+  });
+
+  it('should fetch approved transactions with page param', () => {
+    const mockResponse = {
+      items: [
+        {
+          id: 22,
+          timeZone: 'Europe/London',
+          createdAtTime: '2026-06-20T17:45:08.0545231',
+        },
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 21,
+    };
+
+    service
+      .getApprovedTransactions('Europe/London', '09:01', 1)
+      .subscribe((page) => {
+        expect(page.page).toBe(1);
+        expect(page.items).toHaveLength(1);
+        expect(page.totalCount).toBe(21);
+      });
+
+    const request = httpMock.expectOne((req) => {
+      return (
+        req.url === 'https://localhost:44385/Transactions/approved' &&
+        req.params.get('TimeZone') === 'Europe/London' &&
+        req.params.get('CreatedAtTime') === '09:01' &&
+        req.params.get('Page') === '1'
       );
     });
     expect(request.request.method).toBe('GET');

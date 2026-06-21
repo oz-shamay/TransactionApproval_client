@@ -36,6 +36,9 @@
       [language]="language()"
       [transactions]="approvedTransactions()"
       [timeZoneOptions]="timeZoneOptions()"
+      [hasMore]="hasMore()"
+      [isLoadingMore]="isLoadingMore()"
+      (loadMore)="loadMoreTransactions()"
     />
   </main>
 </div>

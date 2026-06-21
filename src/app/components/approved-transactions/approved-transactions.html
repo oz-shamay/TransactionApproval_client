@@ -13,7 +13,11 @@
       <img ngSrc="assets/arrowLeft.svg" alt="" width="62" height="62" />
     </button>
 
-    <div #carousel class="approved-transactions__carousel">
+    <div
+      #carousel
+      class="approved-transactions__carousel"
+      (scroll)="onCarouselScroll($event)"
+    >
       @for (transaction of transactions(); track transaction.id) {
         <app-transaction-card
           [language]="language()"

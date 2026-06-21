@@ -30,12 +30,22 @@ export class TransactionSimulatorPage {
   private readonly document = inject(DOCUMENT);
   private readonly transactionService = inject(TransactionService);
 
+  private lastQueryTimeZone: string | null = null;
+  private lastQueryCreatedAtTime: string | null = null;
+
   protected readonly language = signal<AppLanguage>('en');
   protected readonly selectedTimeZoneId = signal<string | null>(null);
   protected readonly hour = signal<number | null>(null);
   protected readonly minute = signal<number | null>(null);
   protected readonly timeZoneOptions = signal<TimeZoneOption[]>([]);
   protected readonly approvedTransactions = signal<ApprovedTransaction[]>([]);
+  protected readonly totalCount = signal(0);
+  protected readonly currentPage = signal(0);
+  protected readonly isLoadingMore = signal(false);
+
+  protected readonly hasMore = computed(
+    () => this.approvedTransactions().length < this.totalCount(),
+  );
 
   protected readonly badgeLabel = computed(() =>
     this.language() === 'he' ? 'סימולטור עסקאות' : 'TRANSACTION SIMULATOR',
@@ -92,10 +102,59 @@ export class TransactionSimulatorPage {
         ? this.formatTime(hour, minute)
         : null;
 
+    this.lastQueryTimeZone = timeZone;
+    this.lastQueryCreatedAtTime = createdAtTime;
+    this.approvedTransactions.set([]);
+    this.currentPage.set(0);
+    this.totalCount.set(0);
+
+    this.fetchApprovedTransactions(timeZone, createdAtTime);
+  }
+
+  protected loadMoreTransactions(): void {
+    if (!this.hasMore() || this.isLoadingMore()) {
+      return;
+    }
+
+    const timeZone = this.lastQueryTimeZone;
+
+    if (!timeZone) {
+      return;
+    }
+
+    this.isLoadingMore.set(true);
+
+    this.transactionService
+      .getApprovedTransactions(
+        timeZone,
+        this.lastQueryCreatedAtTime,
+        this.currentPage() + 1,
+      )
+      .subscribe({
+        next: (page) => {
+          this.approvedTransactions.update((prev) => [...prev, ...page.items]);
+          this.currentPage.set(page.page);
+          this.totalCount.set(page.totalCount);
+          this.isLoadingMore.set(false);
+        },
+        error: () => {
+          this.isLoadingMore.set(false);
+        },
+      });
+  }
+
+  private fetchApprovedTransactions(
+    timeZone: string,
+    createdAtTime: string | null,
+  ): void {
     this.transactionService
       .getApprovedTransactions(timeZone, createdAtTime)
       .subscribe({
-        next: (transactions) => this.approvedTransactions.set(transactions),
+        next: (page) => {
+          this.approvedTransactions.set(page.items);
+          this.currentPage.set(page.page);
+          this.totalCount.set(page.totalCount);
+        },
       });
   }
 
