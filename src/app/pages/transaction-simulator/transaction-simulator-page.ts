@@ -11,22 +11,8 @@ import type {
   ApprovedTransaction,
   TimeZoneOption,
 } from '../../models/transaction-simulator.model';
-
-const TIME_ZONE_OPTIONS: TimeZoneOption[] = [
-  { id: 'france', labelEn: 'France', labelHe: 'צרפת' },
-  { id: 'israel', labelEn: 'Israel', labelHe: 'ישראל' },
-  { id: 'cyprus', labelEn: 'Cyprus', labelHe: 'קפריסין' },
-  { id: 'italy', labelEn: 'Italy', labelHe: 'איטליה' },
-];
-
-const APPROVED_TRANSACTIONS: ApprovedTransaction[] = [
-  { id: '1', time: '14:24', timeZoneId: 'france' },
-  { id: '2', time: '14:24', timeZoneId: 'france' },
-  { id: '3', time: '14:24', timeZoneId: 'france' },
-  { id: '4', time: '14:24', timeZoneId: 'france' },
-  { id: '5', time: '14:24', timeZoneId: 'france' },
-  { id: '6', time: '14:24', timeZoneId: 'france' },
-];
+import { toTimeZoneOptions } from '../../models/transaction-simulator.model';
+import { TransactionService } from '../../services/transaction.service';
 
 @Component({
   selector: 'app-transaction-simulator-page',
@@ -42,14 +28,14 @@ const APPROVED_TRANSACTIONS: ApprovedTransaction[] = [
 })
 export class TransactionSimulatorPage {
   private readonly document = inject(DOCUMENT);
+  private readonly transactionService = inject(TransactionService);
 
   protected readonly language = signal<AppLanguage>('en');
-  protected readonly selectedTimeZoneId = signal<string | null>('france');
+  protected readonly selectedTimeZoneId = signal<string | null>(null);
   protected readonly hour = signal(20);
   protected readonly minute = signal(0);
-
-  protected readonly timeZoneOptions = TIME_ZONE_OPTIONS;
-  protected readonly approvedTransactions = APPROVED_TRANSACTIONS;
+  protected readonly timeZoneOptions = signal<TimeZoneOption[]>([]);
+  protected readonly approvedTransactions = signal<ApprovedTransaction[]>([]);
 
   protected readonly badgeLabel = computed(() =>
     this.language() === 'he' ? 'סימולטור עסקאות' : 'TRANSACTION SIMULATOR',
@@ -69,6 +55,11 @@ export class TransactionSimulatorPage {
       htmlElement.lang = currentLanguage;
       htmlElement.dir = currentLanguage === 'he' ? 'rtl' : 'ltr';
     });
+
+  }
+
+  ngOnInit(): void {
+    this.loadTimeZones();
   }
 
   protected setLanguage(language: AppLanguage): void {
@@ -85,5 +76,37 @@ export class TransactionSimulatorPage {
 
   protected setMinute(minute: number): void {
     this.minute.set(minute);
+  }
+
+  protected submitSelection(): void {
+    const timeZone = this.selectedTimeZoneId();
+
+    if (!timeZone) {
+      return;
+    }
+
+    const createdAtTime = this.formatTime(this.hour(), this.minute());
+
+    this.transactionService
+      .getApprovedTransactions(timeZone, createdAtTime)
+      .subscribe({
+        next: (transactions) => this.approvedTransactions.set(transactions),
+      });
+  }
+
+  private loadTimeZones(): void {
+    this.transactionService.getTimeZones().subscribe({
+      next: (timeZones) => {
+        this.timeZoneOptions.set(toTimeZoneOptions(timeZones));
+
+        if (timeZones.length > 0 && !this.selectedTimeZoneId()) {
+          this.selectedTimeZoneId.set(timeZones[0]);
+        }
+      },
+    });
+  }
+
+  private formatTime(hour: number, minute: number): string {
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
 }

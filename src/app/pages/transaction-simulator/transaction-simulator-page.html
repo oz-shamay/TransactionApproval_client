@@ -14,7 +14,7 @@
       <div class="simulator-page__controls">
         <app-search-autocomplete
           [language]="language()"
-          [options]="timeZoneOptions"
+          [options]="timeZoneOptions()"
           [selectedOptionId]="selectedTimeZoneId()"
           (selectedOptionIdChange)="setSelectedTimeZoneId($event)"
         />
@@ -25,6 +25,7 @@
           [minute]="minute()"
           (hourChange)="setHour($event)"
           (minuteChange)="setMinute($event)"
+          (confirm)="submitSelection()"
         />
       </div>
 
@@ -33,8 +34,8 @@
 
     <app-approved-transactions
       [language]="language()"
-      [transactions]="approvedTransactions"
-      [timeZoneOptions]="timeZoneOptions"
+      [transactions]="approvedTransactions()"
+      [timeZoneOptions]="timeZoneOptions()"
     />
   </main>
 </div>
