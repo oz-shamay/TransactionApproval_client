@@ -1,3 +1,8 @@
+instructions for new user:
+1. clone this repo and go to 'main' branch.
+2. In the environment.development.ts file paste your ApiUrl (if running with IIS Express so localhost:{port})
+3. Run with 'ng serve' or 'npm start' command at the main folder of the project and navigate in your browser to the localhost:{port} (usually 4200)
+
 # TransactionApproval
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.3.
