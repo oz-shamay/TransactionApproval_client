@@ -1,0 +1,45 @@
+.transaction-card {
+  flex: 0 0 auto;
+  width: 220px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.transaction-card__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.transaction-card__row + .transaction-card__row {
+  margin-top: 12px;
+}
+
+.transaction-card__label {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.transaction-card__value {
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .transaction-card {
+    width: 168px;
+    padding: 12px;
+  }
+
+  .transaction-card__value {
+    font-size: 14px;
+  }
+}

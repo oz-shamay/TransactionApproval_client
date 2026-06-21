@@ -1,0 +1,15 @@
+<article class="transaction-card" [dir]="language() === 'he' ? 'rtl' : 'ltr'">
+  <p class="transaction-card__row">
+    <span class="transaction-card__label">
+      {{ language() === 'he' ? 'שעה' : 'Time' }}:
+    </span>
+    <span class="transaction-card__value">{{ time() }}</span>
+  </p>
+
+  <p class="transaction-card__row">
+    <span class="transaction-card__label">
+      {{ language() === 'he' ? 'אזור זמן' : 'Time Zone' }}:
+    </span>
+    <span class="transaction-card__value">{{ timeZoneLabel() }}</span>
+  </p>
+</article>

@@ -1,0 +1,35 @@
+<section class="approved-transactions" aria-label="Approved transactions">
+  <div class="approved-transactions__header">
+    <h2 class="approved-transactions__title">{{ title() }}</h2>
+  </div>
+
+  <div class="approved-transactions__controls">
+    <button
+      type="button"
+      class="approved-transactions__nav"
+      [attr.aria-label]="previousLabel()"
+      (click)="scrollPrevious()"
+    >
+      <img ngSrc="assets/arrowLeft.svg" alt="" width="62" height="62" />
+    </button>
+
+    <div #carousel class="approved-transactions__carousel">
+      @for (transaction of transactions(); track transaction.id) {
+        <app-transaction-card
+          [language]="language()"
+          [time]="transaction.time"
+          [timeZoneLabel]="timeZoneLabel(transaction.timeZoneId)"
+        />
+      }
+    </div>
+
+    <button
+      type="button"
+      class="approved-transactions__nav"
+      [attr.aria-label]="nextLabel()"
+      (click)="scrollNext()"
+    >
+      <img ngSrc="assets/arrowRight.svg" alt="" width="62" height="62" />
+    </button>
+  </div>
+</section>

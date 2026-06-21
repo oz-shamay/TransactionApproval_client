@@ -1,0 +1,61 @@
+<section class="time-picker" aria-label="Time picker">
+  <h2 class="time-picker__title">{{ title() }}</h2>
+
+  <div class="time-picker__display">
+    <div class="time-picker__field">
+      <input
+        class="time-picker__value"
+        type="text"
+        inputmode="numeric"
+        maxlength="2"
+        [value]="formatValue(hour())"
+        [attr.aria-label]="hourLabel()"
+        (input)="onHourInput($any($event.target).value)"
+        (blur)="onHourBlur($any($event.target))"
+      />
+      <span class="time-picker__field-label">{{ hourLabel() }}</span>
+    </div>
+
+    <span class="time-picker__separator" aria-hidden="true">:</span>
+
+    <div class="time-picker__field">
+      <input
+        class="time-picker__value"
+        type="text"
+        inputmode="numeric"
+        maxlength="2"
+        [value]="formatValue(minute())"
+        [attr.aria-label]="minuteLabel()"
+        (input)="onMinuteInput($any($event.target).value)"
+        (blur)="onMinuteBlur($any($event.target))"
+      />
+      <span class="time-picker__field-label">{{ minuteLabel() }}</span>
+    </div>
+  </div>
+
+  <div class="time-picker__footer">
+    <svg
+      class="time-picker__clock-icon"
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+    >
+      <circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.5" />
+      <path d="M10 5.5V10L13 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+    </svg>
+
+    <div class="time-picker__actions">
+      <button type="button" class="time-picker__action" (click)="cancel.emit()">
+        {{ cancelLabel() }}
+      </button>
+      <button
+        type="button"
+        class="time-picker__action time-picker__action--primary"
+        (click)="confirm.emit()"
+      >
+        {{ confirmLabel() }}
+      </button>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,64 @@
+<div class="search-autocomplete">
+  <label class="search-autocomplete__label" for="timezone-search">
+    {{ label() }}
+  </label>
+
+  <div class="search-autocomplete__field">
+    <input
+      id="timezone-search"
+      class="search-autocomplete__input"
+      type="search"
+      role="combobox"
+      [attr.aria-expanded]="isOpen()"
+      aria-autocomplete="list"
+      aria-controls="timezone-options"
+      [placeholder]="placeholder()"
+      [value]="query()"
+      (input)="onInput($any($event.target).value)"
+      (focus)="openDropdown()"
+      (blur)="closeDropdown()"
+    />
+
+    @if (query()) {
+      <button
+        type="button"
+        class="search-autocomplete__clear"
+        [attr.aria-label]="language() === 'he' ? 'נקה חיפוש' : 'Clear search'"
+        (mousedown)="$event.preventDefault()"
+        (click)="clearSelection()"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <path
+            d="M12.5 3.5L3.5 12.5M3.5 3.5L12.5 12.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+    }
+  </div>
+
+  @if (isOpen() && filteredOptions().length > 0) {
+    <ul
+      id="timezone-options"
+      class="search-autocomplete__dropdown"
+      role="listbox"
+    >
+      @for (option of filteredOptions(); track option.id) {
+        <li role="presentation">
+          <button
+            type="button"
+            class="search-autocomplete__option"
+            role="option"
+            [attr.aria-selected]="selectedOptionId() === option.id"
+            (mousedown)="$event.preventDefault()"
+            (click)="selectOption(option)"
+          >
+            {{ optionLabel(option) }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

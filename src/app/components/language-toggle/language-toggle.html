@@ -1,0 +1,18 @@
+<div class="language-toggle" role="group" aria-label="Language selection">
+  <button
+    type="button"
+    class="language-toggle__button"
+    [class.language-toggle__button--active]="language() === 'en'"
+    (click)="selectLanguage('en')"
+  >
+    ENG
+  </button>
+  <button
+    type="button"
+    class="language-toggle__button"
+    [class.language-toggle__button--active]="language() === 'he'"
+    (click)="selectLanguage('he')"
+  >
+    Hebrew
+  </button>
+</div>

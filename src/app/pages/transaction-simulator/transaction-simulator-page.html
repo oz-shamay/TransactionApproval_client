@@ -1,0 +1,40 @@
+<div class="simulator-page">
+  <app-header
+    [language]="language()"
+    (languageChange)="setLanguage($event)"
+  />
+
+  <main class="simulator-page__main">
+    <section class="simulator-page__hero">
+      <p class="simulator-page__badge">{{ badgeLabel() }}</p>
+      <h1 class="simulator-page__title">{{ pageTitle() }}</h1>
+    </section>
+
+    <section class="simulator-page__content">
+      <div class="simulator-page__controls">
+        <app-search-autocomplete
+          [language]="language()"
+          [options]="timeZoneOptions"
+          [selectedOptionId]="selectedTimeZoneId()"
+          (selectedOptionIdChange)="setSelectedTimeZoneId($event)"
+        />
+
+        <app-time-picker
+          [language]="language()"
+          [hour]="hour()"
+          [minute]="minute()"
+          (hourChange)="setHour($event)"
+          (minuteChange)="setMinute($event)"
+        />
+      </div>
+
+      <app-promo-panel [language]="language()" />
+    </section>
+
+    <app-approved-transactions
+      [language]="language()"
+      [transactions]="approvedTransactions"
+      [timeZoneOptions]="timeZoneOptions"
+    />
+  </main>
+</div>
